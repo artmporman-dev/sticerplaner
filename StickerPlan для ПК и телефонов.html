@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SticerPlan</title>
+    <style>
+        :root {
+            --primary-blue: #0077b6;
+            --light-blue: #caf0f8;
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            --glass: rgba(255, 255, 255, 0.8);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: #1e3a8a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Адаптивная навигация */
+        #nav-menu {
+            position: fixed;
+            top: 15px;
+            right: 15px;
+            display: none;
+            gap: 15px;
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            padding: 8px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .nav-link { 
+            text-decoration: none; 
+            color: var(--primary-blue); 
+            font-weight: 600; 
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        /* Кнопки */
+        .btn-main {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 119, 182, 0.2);
+        }
+
+        .btn-main:active { transform: scale(0.95); }
+
+        .btn-clear {
+            background: transparent;
+            color: #ef4444;
+            border: 1px solid #ef4444;
+            margin-top: 15px;
+            padding: 8px 20px;
+            font-size: 0.8rem;
+        }
+
+        /* Секции */
+        .page {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+        .active-page { display: flex; }
+
+        /* Эффект Блюра */
+        .blur-effect { filter: blur(15px); }
+        #main-wrapper { 
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: 0.6s; 
+        }
+
+        /* Окно входа */
+        #modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 20px;
+        }
+        .modal { 
+            background: white; 
+            padding: 30px; 
+            border-radius: 24px; 
+            width: 100%;
+            max-width: 320px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+        }
+        .modal input { 
+            padding: 12px; 
+            margin: 15px 0; 
+            border: 2px solid var(--light-blue); 
+            border-radius: 10px; 
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Карточка ввода */
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 25px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 600px) {
+            .input-group { flex-direction: row; }
+        }
+
+        input[type="time"], input[type="text"] {
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(0,0,0,0.1);
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        /* Доска со стикерами */
+        #sticker-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            width: 100%;
+            padding: 20px 0;
+            overflow-y: auto;
+        }
+
+        .sticker {
+            width: 160px;
+            height: 160px;
+            padding: 20px;
+            background: white;
+            border-radius: 2px;
+            position: relative;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;
+            text-align: left;
+        }
+
+        @media (min-width: 400px) {
+            .sticker { width: 190px; height: 190px; }
+        }
+
+        .pin {
+            width: 10px;
+            height: 10px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .sticker-text { font-size: 1rem; font-weight: 500; color: #334155; overflow-wrap: break-word; }
+        .sticker-time { 
+            font-size: 0.85rem; 
+            color: var(--primary-blue); 
+            font-weight: 700;
+            border-top: 1px dashed var(--light-blue);
+            padding-top: 8px;
+        }
+
+        /* Адаптивные шрифты */
+        h1 { font-size: 2.5rem; margin: 0; }
+        @media (min-width: 600px) { h1 { font-size: 4rem; } }
+
+    </style>
+</head>
+<body>
+
+    <div id="nav-menu">
+        <span id="userNameDisplay" style="color: var(--primary-blue); font-weight: 800; font-size: 0.8rem;"></span>
+        <a class="nav-link" onclick="showPage('home-page')">Главная</a>
+        <a class="nav-link" onclick="showPage('list-page')">Список</a>
+    </div>
+
+    <div id="modal-overlay">
+        <div class="modal">
+            <h2>SticerPlan</h2>
+            <input type="text" id="n
+ameInput" placeholder="Ваше имя">
+            <button class="btn-main" style="width:100%" onclick="startSession()">Начать</button>
+        </div>
+    </div>
+
+    <div id="main-wrapper" class="blur-effect">
+        
+        <div id="home-page" class="page active-page">
+            <h1 style="color: var(--primary-blue);">Твоё время</h1>
+            <p style="font-size: 1.2rem; opacity: 0.8; margin-bottom: 30px;">SticerPlan всегда поможет</p>
+            <button class="btn-main" onclick="showPage('add-task-page')">Добавить задачу</button>
+        </div>
+
+        <div id="add-task-page" class="page">
+            <div class="glass-card">
+                <h2 style="margin-top:0">Новая задача</h2>
+                <div class="input-group">
+                    <input type="time" id="taskTime" value="12:00" style="flex: 1;">
+                    <input type="text" id="taskText" placeholder="Что сделать?" style="flex: 2;">
+                </div>
+                <button class="btn-main" style="width:100%" onclick="saveTask()">Сохранить</button>
+            </div>
+        </div>
+
+        <div id="list-page" class="page" style="justify-content: flex-start; padding-top: 80px;">
+            <h2 style="margin-bottom:10px">Ваш график</h2>
+            <div id="sticker-container"></div>
+            <div style="margin: 20px 0; width: 100%; max-width: 300px;">
+                <button class="btn-main" style="width:100%" onclick="showPage('add-task-page')">Добавить ещё</button>
+                <button class="btn-main btn-clear" style="width:100%" onclick="clearTasks()">Очистить всё</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('sticerplan_tasks')) || [];
+        let user = localStorage.getItem('sticerplan_user') || "";
+
+        window.onload = () => { if (user) applyUserData(); };
+
+        function startSession() {
+            const name = document.getElementById('nameInput').value;
+            if (name.trim()) {
+                user = name;
+                localStorage.setItem('sticerplan_user', user);
+                applyUserData();
+            }
+        }
+
+        function applyUserData() {
+            document.getElementById('userNameDisplay').innerText = user;
+            document.getElementById('modal-overlay').style.display = 'none';
+            document.getElementById('main-wrapper').classList.remove('blur-effect');
+            document.getElementById('nav-menu').style.display = 'flex';
+            renderStickers();
+        }
+
+        function showPage(id) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+            document.getElementById(id).classList.add('active-page');
+            window.scrollTo(0,0);
+        }
+
+        function saveTask() {
+            const text = document.getElementById('taskText').value;
+            const time = document.getElementById('taskTime').value;
+            if (!text.trim()) return alert("Введите текст!");
+
+            tasks.push({ text, time, rotate: Math.floor(Math.random() * 4) - 2 });
+            localStorage.setItem('sticerplan_tasks', JSON.stringify(tasks));
+            document.getElementById('taskText').value = "";
+            renderStickers();
+            showPage('list-page');
+        }
+
+        function renderStickers() {
+            const container = document.getElementById('sticker-container');
+            container.innerHTML = "";
+            tasks.sort((a, b) => a.time.localeCompare(b.time));
+            tasks.forEach(t => {
+                const s = document.createElement('div');
+                s.className = 'sticker';
+                s.style.transform = `rotate(${t.rotate}deg)`;s.innerHTML = `<div class="pin"></div><div class="sticker-text">${t.text}</div><div class="sticker-time">⏰ ${t.time}</div>`;
+                container.appendChild(s);
+            });
+        }
+
+        function clearTasks() {
+            if (confirm("Удалить всё?")) {
+                tasks = [];
+                localStorage.setItem('sticerplan_tasks', JSON.stringify(tasks));
+                renderStickers();
+            }
+        }
+    </script>
+</body>
+</html>
